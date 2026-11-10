@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChronosMatch Presentation | Infotact Solutions</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #111827;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #f43f5e;
+            --accent-cyan: #06b6d4;
+            --text-main: #f9fafb;
+            --text-sub: #9ca3af;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .slide-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        .slide {
+            display: none;
+            max-width: 1000px;
+            width: 100%;
+            background: var(--card-bg);
+            border: 1px solid #1f2937;
+            border-radius: 16px;
+            padding: 48px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .slide.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .badge {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-blue);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+        h1 { font-size: 36px; margin-bottom: 12px; font-weight: 800; }
+        h2 { font-size: 26px; margin-bottom: 18px; color: var(--accent-cyan); font-weight: 700; }
+        p { font-size: 16px; color: var(--text-sub); line-height: 1.6; margin-bottom: 16px; }
+        ul { list-style: none; margin-top: 14px; }
+        li {
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            color: #e5e7eb;
+        }
+        li::before {
+            content: "✦";
+            color: var(--accent-blue);
+            font-size: 18px;
+            line-height: 1.2;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .box {
+            background: #1a2234;
+            border: 1px solid #2d3748;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .box h3 { font-size: 16px; color: #fff; margin-bottom: 8px; }
+        .box p { font-size: 14px; margin: 0; color: var(--text-sub); }
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent-green);
+            margin: 6px 0;
+        }
+        .footer-nav {
+            padding: 16px 40px;
+            background: #0d121d;
+            border-top: 1px solid #1f2937;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn {
+            background: #1f2937;
+            color: #fff;
+            border: 1px solid #374151;
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn:hover { background: var(--accent-blue); border-color: var(--accent-blue); }
+        .slide-counter { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--text-sub); }
+    </style>
+</head>
+<body>
+
+<div class="slide-container">
+    <!-- Slide 1 -->
+    <div class="slide active">
+        <span class="badge">Infotact Solutions • Project Defense</span>
+        <h1>ChronosMatch Engine</h1>
+        <h2>Zero-Copy High-Frequency Trading Architecture</h2>
+        <p><strong>Candidate:</strong> Shaik Baji Bee (Data Associate L1. Intern)</p>
+        <p><strong>Domain:</strong> Python Development | <strong>Ref No:</strong> ITS/PY/1126</p>
+        <p><strong>Date:</strong> 10 November 2026</p>
+    </div>
+
+    <!-- Slide 2 -->
+    <div class="slide">
+        <span class="badge">Problem Statement</span>
+        <h2>The Latency Dilemma in Python HFT</h2>
+        <ul>
+            <li>Electronic financial markets (NASDAQ, CME) require sub-microsecond determinism.</li>
+            <li>Standard Python dictionary allocations trigger dynamic memory management on every order.</li>
+            <li>Stop-the-world Garbage Collection (GC) pauses introduce unpredictable 40+ µs tail latency spikes.</li>
+            <li>Memory pointer indirection ruins CPU L1/L2 cache locality.</li>
+        </ul>
+        <div class="box" style="margin-top: 20px; border-left: 4px solid var(--accent-red);">
+            <h3>Goal</h3>
+            <p>Engineer a zero-copy contiguous binary buffer architecture in Python that eliminates heap churn while guaranteeing strict price-time priority execution.</p>
+        </div>
+    </div>
+
+    <!-- Slide 3 -->
+    <div class="slide">
+        <span class="badge">System Architecture</span>
+        <h2>High-Performance Layered Design</h2>
+        <div class="grid-2">
+            <div class="box">
+                <h3>1. Zero-Copy Binary Core</h3>
+                <p>3.2 MB contiguous memory ring buffer sliced via Python <code>memoryview</code>. Pre-allocated 100K 32-byte slots.</p>
+            </div>
+            <div class="box">
+                <h3>2. Matching Engine</h3>
+                <p>Price-Time Priority (FIFO) matching algorithm for Limit & Market orders with partial fills.</p>
+            </div>
+            <div class="box">
+                <h3>3. Persistence Pipeline</h3>
+                <p>SQLite database with atomic multi-table transactions (orders, trades, and benchmark metrics).</p>
+            </div>
+            <div class="box">
+                <h3>4. Web Trading Terminal</h3>
+                <p>FastAPI asynchronous REST backend with a modern dark-themed Bloomberg-style trading terminal.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4 -->
+    <div class="slide">
+        <span class="badge">Core Innovation</span>
+        <h2>Zero-Copy Binary Ring Buffer</h2>
+        <p>Contiguous 32-Byte Aligned Struct Layout: <code>&lt;cc2sQdIQ</code></p>
+        <ul>
+            <li><strong>Direct Memory Packing:</strong> Orders packed directly into buffer offsets using <code>struct.pack_into()</code>.</li>
+            <li><strong>Zero Garbage Collection:</strong> No dictionary or string allocations during the hot matching path.</li>
+            <li><strong>Hardware Timestamps:</strong> Nanosecond precision captured via <code>time.perf_counter_ns()</code>.</li>
+            <li><strong>Cache Efficiency:</strong> Two 32-byte order slots fit exactly within a single 64-byte L1 CPU cache line.</li>
+        </ul>
+    </div>
+
+    <!-- Slide 5 -->
+    <div class="slide">
+        <span class="badge">Matching Engine</span>
+        <h2>Price-Time Priority (FIFO) Execution</h2>
+        <ul>
+            <li><strong>Bids Priority:</strong> Sorted by Highest Price first; ties resolved by earliest submission sequence.</li>
+            <li><strong>Asks Priority:</strong> Sorted by Lowest Price first; ties resolved by earliest submission sequence.</li>
+            <li><strong>Resting Price Rule:</strong> Trades execute at the resting order's limit price.</li>
+            <li><strong>Order Lifecycle:</strong> Supports partial fills, resting limit queues, and instantaneous order cancellations.</li>
+            <li><strong>Market Depth:</strong> Aggregates volume across discrete price tiers for Level 2 visualization.</li>
+        </ul>
+    </div>
+
+    <!-- Slide 6 -->
+    <div class="slide">
+        <span class="badge">Performance Results</span>
+        <h2>Experimental Benchmark Comparison</h2>
+        <p>Evaluated on a sequence burst of 25,000 orders:</p>
+        <div class="grid-2">
+            <div class="box">
+                <h3>Throughput</h3>
+                <div class="stat-value">932,835 ops/sec</div>
+                <p>~1.96× higher sustained throughput than standard Python dictionary allocation.</p>
+            </div>
+            <div class="box">
+                <h3>P50 Median Latency</h3>
+                <div class="stat-value">0.90 µs</div>
+                <p>Sub-microsecond order ingestion latency (compared to 1.90 µs in standard heap).</p>
+            </div>
+            <div class="box">
+                <h3>P99 Tail Latency</h3>
+                <div class="stat-value">2.80 µs</div>
+                <p>More than 2.18× lower tail latency jitter.</p>
+            </div>
+            <div class="box">
+                <h3>Garbage Collection</h3>
+                <div class="stat-value" style="color: var(--accent-cyan);">Zero Pauses</div>
+                <p>Zero transient heap object deallocations in the contiguous binary buffer.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7 -->
+    <div class="slide">
+        <span class="badge">Verification & Quality</span>
+        <h2>Automated Test Suite & Reliability</h2>
+        <ul>
+            <li><strong>19 Automated Unit & Integration Tests:</strong> Covering matching logic, boundary validations, cancellations, zero-copy buffer packing, and SQLite migrations.</li>
+            <li><strong>100% Pass Rate:</strong> Full test suite executes in <strong>0.105 seconds</strong>.</li>
+            <li><strong>Fault-Tolerant Persistence:</strong> Database startup automatically synchronizes with max existing order IDs to eliminate unique key collisions on server restart.</li>
+        </ul>
+    </div>
+
+    <!-- Slide 8 -->
+    <div class="slide">
+        <span class="badge">Conclusion</span>
+        <h2>Deliverables Checklist & Summary</h2>
+        <ul>
+            <li>✅ <strong>Source Code:</strong> Zero-Copy Core, Matching Engine, FastAPI REST API, and Trading Terminal.</li>
+            <li>✅ <strong>Project Documentation:</strong> Comprehensive technical architecture manual.</li>
+            <li>✅ <strong>Formal Project Report:</strong> Full academic and technical internship report.</li>
+            <li>✅ <strong>Benchmarking Suite:</strong> Quantitative microsecond evaluation and interactive lab.</li>
+            <li>✅ <strong>Live Demonstration:</strong> Streaming market feed simulator script.</li>
+        </ul>
+        <div class="box" style="margin-top: 24px; text-align: center;">
+            <h3>Thank You!</h3>
+            <p>Open for questions and live interactive demonstration.</p>
+        </div>
+    </div>
+</div>
+
+<div class="footer-nav">
+    <button class="btn" onclick="prevSlide()">← Previous</button>
+    <span class="slide-counter" id="counter">Slide 1 of 8</span>
+    <button class="btn" onclick="nextSlide()">Next →</button>
+</div>
+
+<script>
+    const slides = document.querySelectorAll('.slide');
+    let current = 0;
+
+    function update() {
+        slides.forEach((s, i) => s.classList.toggle('active', i === current));
+        document.getElementById('counter').textContent = `Slide ${current + 1} of ${slides.length}`;
+    }
+
+    function nextSlide() {
+        if (current < slides.length - 1) { current++; update(); }
+    }
+
+    function prevSlide() {
+        if (current > 0) { current--; update(); }
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+        if (e.key === 'ArrowLeft') prevSlide();
+    });
+</script>
+</body>
+</html>
