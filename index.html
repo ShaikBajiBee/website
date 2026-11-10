@@ -1,40 +1,61 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ChronosMatch Trading Dashboard</title>
+    <title>ChronosMatch | Zero-Copy High-Frequency Trading Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header>
-    <h1>ChronosMatch</h1>
-    <p>Order Matching Engine Dashboard</p>
-    <p id="connection">Connecting to backend...</p>
+    <div class="brand-wrapper">
+        <div class="brand-logo">⚡</div>
+        <div>
+            <h1>ChronosMatch Engine</h1>
+            <p>Zero-Copy High-Frequency Order Matching System (Ref: ITS/PY/1126)</p>
+        </div>
+    </div>
+    <div class="header-meta">
+        <span class="badge-tag">Zero-Copy Buffer: 100K Slots</span>
+        <p id="connection">Connecting to backend...</p>
+    </div>
 </header>
 
 <main>
-    <!-- Existing Statistics -->
+    <!-- Top Statistics Ribbon -->
     <section class="stats">
         <article class="card">
             <h3>Submitted Orders</h3>
-            <p id="orderCount">0</p>
+            <p id="orderCount" class="highlight-blue">0</p>
         </article>
         <article class="card">
             <h3>Completed Trades</h3>
-            <p id="tradeCount">0</p>
+            <p id="tradeCount" class="highlight-green">0</p>
+        </article>
+        <article class="card">
+            <h3>Best Bid</h3>
+            <p id="bestBidDisplay" class="highlight-green">-</p>
+        </article>
+        <article class="card">
+            <h3>Best Ask</h3>
+            <p id="bestAskDisplay" class="highlight-red">-</p>
+        </article>
+        <article class="card">
+            <h3>Bid-Ask Spread</h3>
+            <p id="spreadDisplay">-</p>
         </article>
     </section>
 
-    <!-- NEW: Daily Information -->
+    <!-- Daily Information Dashboard -->
     <section class="panel">
-        <h2>Daily Information</h2>
-
+        <h2>Daily Trading Performance & Metrics</h2>
         <section class="stats daily-stats">
             <article class="card">
                 <h3>Today's Date</h3>
-                <p id="todayDate">Loading...</p>
+                <p id="todayDate" style="font-size: 20px;">Loading...</p>
             </article>
 
             <article class="card">
@@ -44,93 +65,202 @@
 
             <article class="card">
                 <h3>Trades Today</h3>
-                <p id="dailyTradeCount">0</p>
+                <p id="dailyTradeCount" class="highlight-blue">0</p>
             </article>
 
             <article class="card">
-                <h3>Total Quantity Traded Today</h3>
-                <p id="dailyQuantity">0</p>
+                <h3>Total Quantity Traded</h3>
+                <p id="dailyQuantity" class="highlight-green">0</p>
             </article>
         </section>
     </section>
 
-    <!-- Place Order -->
-    <section class="panel">
-        <h2>Place an Order</h2>
-        <form id="orderForm">
-            <label for="side">Order Side</label>
-            <select id="side">
-                <option value="BUY">BUY</option>
-                <option value="SELL">SELL</option>
-            </select>
+    <!-- Main Trading Floor Grid -->
+    <div class="trading-grid">
+        <!-- Order Placement Panel -->
+        <section class="panel">
+            <h2>Place Order</h2>
+            <form id="orderForm">
+                <div class="side-toggle-group">
+                    <button type="button" class="side-btn active buy-active" id="btnSideBuy">BUY</button>
+                    <button type="button" class="side-btn" id="btnSideSell">SELL</button>
+                </div>
 
-            <label for="price">Price (₹)</label>
-            <input id="price" type="number"
-                   min="0.01" step="0.01" required>
+                <div class="form-group" style="display: none;">
+                    <label for="side">Order Side</label>
+                    <select id="side">
+                        <option value="BUY" selected>BUY</option>
+                        <option value="SELL">SELL</option>
+                    </select>
+                </div>
 
-            <label for="quantity">Quantity</label>
-            <input id="quantity" type="number"
-                   min="1" step="1" required>
+                <div class="form-group">
+                    <label for="price">Limit Price (₹)</label>
+                    <input id="price" type="number" min="0.01" step="0.01" placeholder="e.g. 150.00" required>
+                    <div class="quick-chips">
+                        <button type="button" class="chip-btn" onclick="adjustPrice(1.0)">+₹1.0</button>
+                        <button type="button" class="chip-btn" onclick="adjustPrice(5.0)">+₹5.0</button>
+                        <button type="button" class="chip-btn" onclick="adjustPrice(10.0)">+₹10.0</button>
+                        <button type="button" class="chip-btn" onclick="setPriceToBest('BUY')">Match Bid</button>
+                        <button type="button" class="chip-btn" onclick="setPriceToBest('SELL')">Match Ask</button>
+                    </div>
+                </div>
 
-            <button type="submit">Submit Order</button>
-        </form>
-        <p id="message" role="status"></p>
-    </section>
+                <div class="form-group">
+                    <label for="quantity">Order Quantity</label>
+                    <input id="quantity" type="number" min="1" step="1" placeholder="e.g. 25" required>
+                    <div class="quick-chips">
+                        <button type="button" class="chip-btn" onclick="setQty(10)">10</button>
+                        <button type="button" class="chip-btn" onclick="setQty(25)">25</button>
+                        <button type="button" class="chip-btn" onclick="setQty(50)">50</button>
+                        <button type="button" class="chip-btn" onclick="setQty(100)">100</button>
+                        <button type="button" class="chip-btn" onclick="setQty(500)">500</button>
+                    </div>
+                </div>
 
-    <!-- Pending Buy Orders -->
-    <section class="panel">
-        <h2>Pending Buy Orders</h2>
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Price</th>
-                        <th>Remaining</th>
-                    </tr>
-                </thead>
-                <tbody id="buyTable"></tbody>
-            </table>
+                <div class="calc-summary">
+                    <span>Order Value (Est.):</span>
+                    <strong id="orderValueDisplay">₹0.00</strong>
+                </div>
+
+                <button type="submit" id="submitOrderBtn">Submit Order</button>
+            </form>
+            <p id="message" role="status"></p>
+        </section>
+
+        <!-- Level 2 Depth & Pending Orders -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <!-- Pending Buy Orders -->
+            <section class="panel">
+                <h2>Pending Buy Orders (Bids)</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Bid Price</th>
+                                <th>Remaining Qty</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="buyTable"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Pending Sell Orders -->
+            <section class="panel">
+                <h2>Pending Sell Orders (Asks)</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Ask Price</th>
+                                <th>Remaining Qty</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sellTable"></tbody>
+                    </table>
+                </div>
+            </section>
         </div>
-    </section>
 
-    <!-- Pending Sell Orders -->
+        <!-- Completed Trades Tape -->
+        <section class="panel tape-column">
+            <h2>Executed Trade Feed (Tape)</h2>
+            <button id="refreshButton" type="button">
+                ↻ Refresh Dashboard
+            </button>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Trade ID</th>
+                            <th>Buy ID</th>
+                            <th>Sell ID</th>
+                            <th>Exec Price</th>
+                            <th>Qty</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tradeTable"></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Zero-Copy High-Frequency Benchmark Lab -->
     <section class="panel">
-        <h2>Pending Sell Orders</h2>
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Price</th>
-                        <th>Remaining</th>
-                    </tr>
-                </thead>
-                <tbody id="sellTable"></tbody>
-            </table>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+            <div>
+                <h2>⚡ Zero-Copy Engine Benchmark Lab</h2>
+                <p style="font-size: 13px; color: var(--text-secondary);">
+                    Microsecond-level performance profiling comparing Python dynamic object allocation vs ChronosMatch Zero-Copy contiguous binary ring buffers.
+                </p>
+            </div>
+            <button type="button" class="run-bench-btn" id="runBenchmarkBtn">
+                ⚡ Run 25,000 Order Benchmark
+            </button>
         </div>
-    </section>
 
-    <!-- Completed Trades -->
-    <section class="panel">
-        <h2>Completed Trades</h2>
-        <button id="refreshButton" type="button">
-            Refresh Dashboard
-        </button>
+        <div class="benchmark-grid" id="benchmarkGrid">
+            <div class="benchmark-card">
+                <h4><span>Standard Python Dict</span> <span style="color: var(--sell-red);">Dynamic Heap</span></h4>
+                <div class="metric-row">
+                    <span>Throughput:</span>
+                    <span class="metric-val" id="benchDictThroughput">Loading...</span>
+                </div>
+                <div class="metric-row">
+                    <span>Avg Latency:</span>
+                    <span class="metric-val" id="benchDictAvg">Loading...</span>
+                </div>
+                <div class="metric-row">
+                    <span>P50 Median Latency:</span>
+                    <span class="metric-val" id="benchDictP50">Loading...</span>
+                </div>
+                <div class="metric-row">
+                    <span>P99 Tail Latency:</span>
+                    <span class="metric-val" id="benchDictP99">Loading...</span>
+                </div>
+            </div>
 
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Trade ID</th>
-                        <th>Buy ID</th>
-                        <th>Sell ID</th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                    </tr>
-                </thead>
-                <tbody id="tradeTable"></tbody>
-            </table>
+            <div class="benchmark-card" style="border-color: #3b82f666;">
+                <h4><span>ChronosMatch Zero-Copy</span> <span style="color: var(--buy-green);">Binary Ring Buffer</span></h4>
+                <div class="metric-row">
+                    <span>Throughput:</span>
+                    <span class="metric-val val-green" id="benchZcThroughput">Loading...</span>
+                </div>
+                <div class="metric-row">
+                    <span>Avg Latency:</span>
+                    <span class="metric-val val-green" id="benchZcAvg">Loading...</span>
+                </div>
+                <div class="metric-row">
+                    <span>P50 Median Latency:</span>
+                    <span class="metric-val val-green" id="benchZcP50">Loading...</span>
+                </div>
+                <div class="metric-row">
+                    <span>P99 Tail Latency:</span>
+                    <span class="metric-val val-green" id="benchZcP99">Loading...</span>
+                </div>
+            </div>
+
+            <div class="benchmark-card" style="border-color: #8b5cf666;">
+                <h4><span>HFT Acceleration Factor</span> <span style="color: #a78bfa;">Zero GC Pause</span></h4>
+                <div class="metric-row">
+                    <span>Speedup Multiplier:</span>
+                    <span class="metric-val val-blue" id="benchSpeedup" style="font-size: 18px;">-</span>
+                </div>
+                <div class="metric-row">
+                    <span>Memory Model:</span>
+                    <span class="metric-val" style="font-size: 11px; color: var(--text-secondary);">Pre-allocated Contiguous 32-byte slots</span>
+                </div>
+                <div class="metric-row">
+                    <span>Status:</span>
+                    <span class="metric-val val-green" id="benchStatus">Ready</span>
+                </div>
+            </div>
         </div>
     </section>
 </main>
