@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChronosMatch - Technical Documentation | Infotact Solutions</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #2563eb;
+            --text-dark: #0f172a;
+            --text-muted: #475569;
+            --bg-light: #f8fafc;
+            --border: #cbd5e1;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+            background: #ffffff;
+            line-height: 1.6;
+            padding: 40px 60px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .header {
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .badge {
+            display: inline-block;
+            background: #dbeafe;
+            color: var(--accent);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+        .meta-line { font-size: 13px; color: var(--text-muted); }
+        h2 {
+            font-size: 18px;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+            margin-top: 30px;
+            margin-bottom: 14px;
+        }
+        h3 { font-size: 15px; margin-top: 18px; margin-bottom: 6px; }
+        p { font-size: 14px; margin-bottom: 12px; }
+        ul, ol { margin-left: 20px; margin-bottom: 14px; font-size: 14px; }
+        li { margin-bottom: 4px; }
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        pre {
+            background: #0f172a;
+            color: #f8fafc;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin-bottom: 14px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 13px;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            text-align: left;
+        }
+        th { background: #f1f5f9; font-weight: 600; }
+        @media print {
+            body { padding: 0; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="no-print" style="background: #e0f2fe; padding: 12px; text-align: center; border-radius: 6px; margin-bottom: 24px;">
+    <strong>Tip:</strong> Press <code>Ctrl + P</code> (or Cmd + P) in your browser to save this Technical Documentation as a clean PDF document.
+</div>
+
+<div class="header">
+    <span class="badge">Technical Specification & Manual</span>
+    <h1>ChronosMatch: Zero-Copy High-Frequency Trading Engine</h1>
+    <div class="meta-line">
+        <strong>Candidate:</strong> Shaik Baji Bee (Data Associate L1. Intern) | 
+        <strong>Ref No:</strong> ITS/PY/1126 | 
+        <strong>Company:</strong> Infotact Solutions
+    </div>
+</div>
+
+<h2>1. Introduction & Objectives</h2>
+<p>
+    ChronosMatch is a low-latency electronic trading engine built in Python. It replaces standard heap object allocations with a contiguous binary ring buffer to achieve deterministic microsecond execution for BUY and SELL orders while persisting order and trade history to an ACID-compliant SQLite database.
+</p>
+
+<h2>2. Zero-Copy Architecture Specification</h2>
+<p>
+    Standard Python applications allocate memory dynamically on the heap for every dictionary or object. Under heavy order bursts, this triggers Stop-The-World Garbage Collector (GC) scans that degrade system responsiveness.
+</p>
+<p>
+    ChronosMatch utilizes a <strong>pre-allocated 3.2 Megabyte contiguous buffer</strong> (100,000 slots of 32 bytes each) sliced using Python's native <code>memoryview</code> and packed via <code>struct.Struct('&lt;cc2sQdIQ')</code>:
+</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Field</th>
+            <th>Type</th>
+            <th>Size</th>
+            <th>Purpose</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><code>side</code></td><td>char</td><td>1 Byte</td><td>'B' for Buy, 'S' for Sell</td></tr>
+        <tr><td><code>order_type</code></td><td>char</td><td>1 Byte</td><td>'L' for Limit, 'M' for Market</td></tr>
+        <tr><td><code>padding</code></td><td>2 bytes</td><td>2 Bytes</td><td>32-byte cache alignment</td></tr>
+        <tr><td><code>order_id</code></td><td>uint64</td><td>8 Bytes</td><td>Unique sequential order identifier</td></tr>
+        <tr><td><code>price</code></td><td>double</td><td>8 Bytes</td><td>Limit order price</td></tr>
+        <tr><td><code>quantity</code></td><td>uint32</td><td>4 Bytes</td><td>Number of shares/contracts</td></tr>
+        <tr><td><code>timestamp_ns</code></td><td>uint64</td><td>8 Bytes</td><td>Hardware nanosecond timestamp</td></tr>
+    </tbody>
+</table>
+
+<h2>3. Matching Engine & Priority Logic</h2>
+<ul>
+    <li><strong>Price Priority:</strong> High bids execute before low bids; low asks execute before high asks.</li>
+    <li><strong>Time Priority (FIFO):</strong> At identical price levels, earlier orders take precedence.</li>
+    <li><strong>Execution Price:</strong> Matches occur at the resting limit order price (passive maker price).</li>
+    <li><strong>Lifecycle:</strong> Orders transition from <code>OPEN</code> &rarr; <code>PARTIALLY_FILLED</code> &rarr; <code>FILLED</code> or <code>CANCELLED</code>.</li>
+</ul>
+
+<h2>4. REST API Endpoint Reference</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><code>GET</code></td><td><code>/</code></td><td>Health check & endpoint directory</td></tr>
+        <tr><td><code>GET</code></td><td><code>/dashboard/</code></td><td>Bloomberg-style trading terminal UI</td></tr>
+        <tr><td><code>POST</code></td><td><code>/orders</code></td><td>Submit BUY / SELL order</td></tr>
+        <tr><td><code>GET</code></td><td><code>/orders</code></td><td>Active order book snapshot & order history</td></tr>
+        <tr><td><code>DELETE</code></td><td><code>/orders/{id}</code></td><td>Cancel an active order</td></tr>
+        <tr><td><code>GET</code></td><td><code>/trades</code></td><td>Completed trade execution history</td></tr>
+        <tr><td><code>GET</code></td><td><code>/book/depth</code></td><td>Level 2 aggregated market depth</td></tr>
+        <tr><td><code>GET</code></td><td><code>/stats/daily</code></td><td>Daily aggregated analytics</td></tr>
+        <tr><td><code>POST</code></td><td><code>/benchmark/run</code></td><td>Execute Zero-Copy vs Heap benchmark</td></tr>
+    </tbody>
+</table>
+
+<h2>5. Automated Test Suite</h2>
+<p>
+    The engine includes 19 automated unit and integration tests covering order matching, edge cases, partial fills, cancellations, zero-copy buffer packing, and SQLite migrations:
+</p>
+<pre>python -m unittest discover -s texts -v
+Ran 19 tests in 0.100s - OK</pre>
+
+</body>
+</html>
